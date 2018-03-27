@@ -585,12 +585,22 @@ def getVeiculoOP(dia, mes, ano):
 						return placa
 	return None
 
+def generateSubList():
+    return [clientesCadastrados[index] for index in range(int(len(clientesCadastrados) / 5))]
+
 
 def getCliente(dia, mes, ano):
 	i = 0
 	while i < 500:
 		i+=1
-		cliente = random.choice(clientesCadastrados)
+		rad = random.random()
+
+		cliente = ''
+		if rad > 0.70:
+			cliente = random.choice(clientesCadastrados)
+		else:
+			# subList = [clientesCadastrados[index] for index in range(int(len(clientesCadastrados)/4))]
+			cliente = random.choice(subList)	
 		# print('incluiu')
 		# print('Escolheu:'+cliente+'\n')
 		# print('Data:'+str(ano)+'-'+str(mes)+'-'+str(dia)+'\n\n')
@@ -641,8 +651,8 @@ def criarAluguelRevisao2(fSaida):
 	for ano in range(2015,2019):
 		for mes in range(1,13):
 			for dia in range(1,29):
-
-				qtd = randint(2, 35)
+				maxQtd = 80*(ano-2000) + dia
+				qtd = randint(100, maxQtd)
 				print('\n--------------------------------\n')
 				print('Relacoes em: '+str(ano)+'-'+str(mes)+'-'+str(dia))
 				print('\n***********************************\n')
@@ -707,11 +717,11 @@ fSaida = open(path, 'w+')
 
 
 print('Cria clientes...')
-clientesGenerator(80000, fSaida)
+clientesGenerator(50000, fSaida)
 print('Cria funcionarios...')
 funcionario(1500, fSaida)
 print('Cria carros...')
-carrosCreator(10000, fSaida)
+carrosCreator(8000, fSaida)
 print('Cria motos...')
 motosCreator(5000, fSaida)
 print('Cria utilitarios...')
@@ -731,6 +741,7 @@ utilitariosCreator(3000, fSaida)
 # fSaida = open(path, 'w+')
 
 print('Cria relacoes...')
+subList = generateSubList()
 criarAluguelRevisao2(fSaida)
 
 print('Criando cupons')
@@ -742,8 +753,10 @@ print('Premiuns')
 i = 0
 for p in clientesCadastrados:
 	cnh, dt, score = p.split(':')
+	print(score)
 	score = int(score)
-	if(score >= 5000):
+
+	if(score >= 2000):
 		i += 1
 		categoria = random.choice(cat)
 		query = '\nINSERT INTO cliente_premium(cnh, categoria)VALUES("'+cnh+'", "'+categoria+'");\n'
