@@ -536,20 +536,17 @@ def permitidaOP2(data, v, cliente):
 
 	return True
 
-def atualizaClienteVeiculo(v, dtManutencao, cliente, dtFim):
-	for x in range(len(clientesCadastrados)):
-		c = clientesCadastrados[x]
-		cnh, dt, score = c.split(':')
-		if cnh == cliente:
-			clientesCadastrados[x] = cnh+':'+dtFim+':' + str(int(score)+100)
-			break
+def atualizaClienteVeiculo(veiculoIndex, dtManutencao, clienteIndex, dtFim):
+	c = clientesCadastrados[clienteIndex]
+	cnh, dt, score = c.split(':')
+	
+	clientesCadastrados[clienteIndex] = cnh+':'+dtFim+':' + str(int(score)+300)
+	
+	car = veiculosTimeLine[veiculoIndex]
+	ano, placa, dt = car.split(':')
 
-	for x in range(len(veiculosTimeLine)):
-		car = veiculosTimeLine[x]
-		ano, placa, dt = car.split(':')
-		if placa == v:
-			veiculosTimeLine[x] = ano+':'+placa+':'+dtManutencao
-			break
+	veiculosTimeLine[veiculoIndex] = ano+':'+placa+':'+dtManutencao
+	
 
 	# for x in range(len(clientesCadastrados)):
 	# 	c = clientesCadastrados[x]
@@ -568,9 +565,10 @@ def atualizaClienteVeiculo(v, dtManutencao, cliente, dtFim):
 
 def getVeiculoOP(dia, mes, ano):
 	i = 0
-	while i < 500:
+	while i < 200:
 		i+=1
-		car = random.choice(veiculosTimeLine)
+		carIndex = randint(0, len(veiculosTimeLine)-1)
+		car = veiculosTimeLine[carIndex]
 		fab, placa, dt = car.split(':')
 		# print('Escolheu:'+car+'\n')
 		# print('Data:'+str(ano)+'-'+str(mes)+'-'+str(dia)+'\n\n')
@@ -582,64 +580,65 @@ def getVeiculoOP(dia, mes, ano):
 				if not int(m) > mes:
 					if not int(d) > dia:
 					
-						return placa
+						return carIndex
 	return None
 
 def generateSubList():
-    return [clientesCadastrados[index] for index in range(int(len(clientesCadastrados) / 5))]
+    return int(len(clientesCadastrados)/7)
 
 
 def getCliente(dia, mes, ano):
 	i = 0
-	while i < 500:
+	while i < 200:
 		i+=1
 		rad = random.random()
 
-		cliente = ''
+		clienteIndex = 0
 		if rad > 0.70:
-			cliente = random.choice(clientesCadastrados)
+
+			clienteIndex = randint(0, len(clientesCadastrados)-1)
 		else:
 			# subList = [clientesCadastrados[index] for index in range(int(len(clientesCadastrados)/4))]
-			cliente = random.choice(subList)	
+			clienteIndex = randint(0, subList)	
 		# print('incluiu')
 		# print('Escolheu:'+cliente+'\n')
 		# print('Data:'+str(ano)+'-'+str(mes)+'-'+str(dia)+'\n\n')
-		cnh, dt, score = cliente.split(':')		
+		cnh, dt, score = clientesCadastrados[clienteIndex].split(':')		
 		a, m, d = dt.split('-')
 		if not int(a) > ano:
 			if not int(m) > mes:
 				if not int(d) > dia:
 					
-					return cnh
+					return clienteIndex
 	return None
 
 
-def getMultas(dtInicio, veiculo, cliente):
+def getMultas(dtInicio, veiculoIndex, clienteIndex):
 	if random.random() > 0.2:
-		for p in range(len(clientesCadastrados)):
-			cnh, dt, score = clientesCadastrados[p].split(':')
-			if cnh == cliente:
-				score = int(score)
-				score -= 50
-				if score < 0:
-					score = 0
-				clientesCadastrados[p] = cnh+':'+dt+':'+str(score)
-		query = '\nINSERT INTO infracao(placa, dtEmissao, valor, cnh)VALUES("'+veiculo+'", "'+dtInicio+'", "'+str(float(randint(50, 500)))+'", "'+cliente+'");\n'
+		cnh, dt, score = clientesCadastrados[clienteIndex].split(':')	
+		score = int(score)
+		score -= 50
+		if score < 0:
+			score = 0
+		veiculo = veiculosTimeLine[veiculoIndex]
+		fab, placa, dt = veiculo.split(':')
+		clientesCadastrados[clienteIndex] = cnh+':'+dt+':'+str(score)
+		query = '\nINSERT INTO infracao(placa, dtEmissao, valor, cnh)VALUES("'+placa+'", "'+dtInicio+'", "'+str(float(randint(50, 500)))+'", "'+cnh+'");\n'
 		return query
 	else:
 		return '\n'	
 
-def getAcidente(dtFim, veiculo, cliente):
+def getAcidente(dtFim, veiculoIndex, clienteIndex):
 	if random.random() > 0.02:
-		for p in range(len(clientesCadastrados)):
-			cnh, dt, score = clientesCadastrados[p].split(':')
-			if cnh == cliente:
-				score = int(score)
-				score -= 50
-				if score < 0:
-					score = 0
-				clientesCadastrados[p] = cnh+':'+dt+':'+str(score)
-		query = '\nINSERT INTO acidente(placa, dtAcidente, cnh)VALUES("'+veiculo+'", "'+dtFim+'", "'+cliente+'");\n'
+		cnh, dt, score = clientesCadastrados[clienteIndex].split(':')
+		score = int(score)
+		score -= 50
+		if score < 0:	
+			score = 0
+		clientesCadastrados[clienteIndex] = cnh+':'+dt+':'+str(score)
+		veiculo = veiculosTimeLine[veiculoIndex]
+		fab, placa, dt = veiculo.split(':')
+		query = '\nINSERT INTO acidente(placa, dtAcidente, cnh)VALUES("'+placa+'", "'+dtFim+'", "'+cnh+'");\n'
 		return query, True
 	else:
 		return '\n', False
@@ -648,45 +647,54 @@ def getAcidente(dtFim, veiculo, cliente):
 
 def criarAluguelRevisao2(fSaida):
 	i = 1
-	for ano in range(2015,2019):
+	for ano in range(2017,2019):
 		for mes in range(1,13):
 			for dia in range(1,29):
-				maxQtd = 80*(ano-2000) + dia
-				qtd = randint(100, maxQtd)
+				print(type(ano))
+				maxQtd = 12*(ano-2000) + dia*3
+				qtd = randint(30, maxQtd)
 				print('\n--------------------------------\n')
 				print('Relacoes em: '+str(ano)+'-'+str(mes)+'-'+str(dia))
 				print('\n***********************************\n')
 				for interacoes in range (qtd):
-					veiculo = getVeiculoOP(dia, mes, ano)
-					cliente = getCliente(dia, mes, ano)
+					veiculoIndex = getVeiculoOP(dia, mes, ano)
+					clienteIndex = getCliente(dia, mes, ano)
 
-					if(veiculo == None or cliente == None):
+					if(veiculoIndex == None or clienteIndex == None):
 						continue
+
+					veiculo = veiculosTimeLine[veiculoIndex]
+					cliente = clientesCadastrados[clienteIndex]
+
+					anoV, placa, dt = veiculo.split(':')
+					cnh, dt, score = cliente.split(':')
 
 					duracao = randint(1, 5)
 					kmRodado = randint(5, 80)*duracao
 					manutencao = randint(2, 5)
 					dtInicio, dtFim, dtManutencao = period2(dia, mes, ano, duracao, manutencao)
-					multa = getMultas(dtInicio, veiculo, cliente)
-					acidente, resp = getAcidente(dtFim, veiculo, cliente)
+
+
+					multa = getMultas(dtInicio, veiculoIndex, clienteIndex)
+					acidente, resp = getAcidente(dtFim, veiculoIndex, clienteIndex)
 					inclusao = str(i) +':'+veiculo + ':' + cliente + ':' + dtInicio + ':' +dtFim
 					existOPR.append(inclusao)
 					incluiRevisao(dtManutencao, veiculo)
-					atualizaClienteVeiculo(veiculo, dtManutencao, cliente, dtFim)
+					atualizaClienteVeiculo(veiculoIndex, dtManutencao, clienteIndex, dtFim)
 					# print('id: placa: cnh: dtInicio: dtFim')
 					# print(inclusao)
 					# print('\n--------------------------------\n')
 
-					final = '\nBEGIN;\nINSERT INTO aluguel(placa, dtRetirada, dtDevolucao, kmRodado, cnh)VALUES("'+veiculo+'", "'+dtInicio+'", "'+dtFim+'", "'+str(kmRodado)+'", "'+cliente+'");'
+					final = '\nBEGIN;\nINSERT INTO aluguel(placa, dtRetirada, dtDevolucao, kmRodado, cnh)VALUES("'+placa+'", "'+dtInicio+'", "'+dtFim+'", "'+str(kmRodado)+'", "'+cnh+'");'
 					final += multa
 					final += acidente
 					
 					revisaoQuery = ''
 
 					if resp == True:
-						revisaoQuery = '\nINSERT INTO revisao(placa, dtRevisao, valor, descricao)VALUES("'+veiculo+'", "'+dtManutencao+'", "'+str(float(randint(200, 2000)))+'", "'+random.choice(descricaoAcidente)+'");\n'
+						revisaoQuery = '\nINSERT INTO revisao(placa, dtRevisao, valor, descricao)VALUES("'+placa+'", "'+dtManutencao+'", "'+str(float(randint(200, 2000)))+'", "'+random.choice(descricaoAcidente)+'");\n'
 					else:
-						revisaoQuery = '\nINSERT INTO revisao(placa, dtRevisao, valor, descricao)VALUES("'+veiculo+'", "'+dtManutencao+'", "'+str(float(randint(20, 100)))+'", "'+random.choice(descricaoManutencaoSimples)+'");\n'
+						revisaoQuery = '\nINSERT INTO revisao(placa, dtRevisao, valor, descricao)VALUES("'+placa+'", "'+dtManutencao+'", "'+str(float(randint(20, 100)))+'", "'+random.choice(descricaoManutencaoSimples)+'");\n'
 					final += revisaoQuery
 					final += '\nCOMMIT;\n\n'
 					fSaida.write(final)
@@ -699,12 +707,13 @@ def criaCupons():
 	fact = 50
 	idC = 1
 	for categoria in cat:
-		for x in range(2, 16):
+		for x in range(2, 10):
 			query = '\nINSERT INTO cupom(idCupom, precoPonto, desconto, categoria)VALUES("'+str(idC)+'", "'+str(100*x+fact)+'", "'+str(x)+'", "'+categoria+'");\n'
 			fSaida.write(query)
 			cupons.append(str(idC)+':'+str(100*x+fact)+':'+categoria+':'+str(x))
 			idC+=1
-		fact +=50
+		fact +=400
+		print('cupom_mais_caro:' + str(1600+fact))
 
 
 # Modifique o local de armazenamento
@@ -717,15 +726,15 @@ fSaida = open(path, 'w+')
 
 
 print('Cria clientes...')
-clientesGenerator(50000, fSaida)
+clientesGenerator(30000, fSaida)
 print('Cria funcionarios...')
-funcionario(1500, fSaida)
+funcionario(500, fSaida)
 print('Cria carros...')
-carrosCreator(8000, fSaida)
+carrosCreator(3000, fSaida)
 print('Cria motos...')
-motosCreator(5000, fSaida)
+motosCreator(2000, fSaida)
 print('Cria utilitarios...')
-utilitariosCreator(3000, fSaida)
+utilitariosCreator(1000, fSaida)
 
 # print(clientesCadastrados)
 # print(funcionarioCadastrados)
@@ -756,7 +765,7 @@ for p in clientesCadastrados:
 	print(score)
 	score = int(score)
 
-	if(score >= 2000):
+	if(score >= 3000):
 		i += 1
 		categoria = random.choice(cat)
 		query = '\nINSERT INTO cliente_premium(cnh, categoria)VALUES("'+cnh+'", "'+categoria+'");\n'

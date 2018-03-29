@@ -99,9 +99,9 @@ CREATE TABLE infracao(
 );
 CREATE TABLE aluguel(
 	codAluguel INT AUTO_INCREMENT PRIMARY KEY,
-	placa CHAR(8) REFERENCES veiculo(placa) ON DELETE CASCADE,
+	placa CHAR(8),
     dtRetirada DATE NOT NULL,
-    dtDevolucao DATE,
+    dtDevolucao DATE NOT NULL,
     kmRodado INT,
     cnh CHAR(11) NOT NULL,
     FOREIGN KEY (cnh) REFERENCES cliente(cnh) ON DELETE CASCADE,
